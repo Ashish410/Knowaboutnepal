@@ -73,35 +73,39 @@ questions = [
 ]
 
 import streamlit as st
-st.title("Know about 🇳🇵 ")
-st.markdown("**Created by: Ashish** ✨")
-score = 0
-for i, q in enumerate(questions):
-    st.subheader(f"Q{i+1}: {q['question']}")
-    user_answer = st.radio("Choose your answer:", q["options"], key=i)
 
-    if st.button(f"Submit Q{i+1}", key=f"submit_{i}"):
-        if user_answer.startswith(q["answer"]):
-            st.success("✅ Correct!")
+# Page setup
+st.set_page_config(page_title="Nepal Quiz 🇳🇵", page_icon="🗻", layout="centered")
+
+# Title and intro
+st.title("Know about 🇳🇵")
+st.markdown("**Created by: Ashish ✨**")
+
+
+# Quiz form
+with st.form("quiz_form"):
+    st.subheader("Choose your answers:")
+    user_answers = {}
+    for i, (q, data) in enumerate(questions.items()):
+        user_answers[q] = st.radio(q, ["Choose an answer"] + data["options"], index=0, key=f"q{i}")
+    submitted = st.form_submit_button("Submit")
+
+# Score evaluation
+if submitted:
+    score = 0
+    st.subheader("Results:")
+    for q, data in questions.items():
+        selected = user_answers[q]
+        correct = data["answer"]
+        if selected == correct:
+            st.success(f"✅ {q} — Correct!")
             score += 1
+        elif selected == "Choose an answer":
+            st.warning(f"⚠️ {q} — No answer selected. Correct answer: {correct}")
         else:
-            st.error(f"❎ Wrong! The correct answer was {q['answer']}")
+            st.error(f"❌ {q} — Wrong! Correct answer: {correct}")
+    st.markdown(f"### Your final score: **{score} / {len(questions)}**")
 
-st.write(f"### Your final score is: {score}/{len(questions)}")
-
-import datetime
-import streamlit as st
-
-def save_score(username, score, total_questions):
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with open("quiz_scores.txt", "a") as file:
-        file.write(f"{timestamp} | {username} | Score: {score}/{total_questions}\n")
-
-# Ask for user's name
-username = st.text_input("Enter your name to save your score:")
-
-# Show save button
-if st.button("Save My Score"):
-    save_score(username, score, len(questions))
-    st.success("✅ Your score has been saved!")
-
+    # Replay button
+    if st.button("Play Again"):
+        st.experimental_rerun()
